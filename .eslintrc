@@ -1,0 +1,32 @@
+{
+    "rules": {
+        "indent": [2, 2],
+        "no-unused-vars": [2, {"vars": "all", "args": "none"}],
+        "linebreak-style": [2, "unix"],
+        "semi": [2, "always"],
+        "no-var": [2],
+        "prefer-const": [2],
+        "no-const-assign": [2]
+    },
+    "globals": {
+      "describe": true,
+      "it": true,
+      "beforeEach": true
+    },
+    "env": {
+        "es6": true,
+        "node": true,
+        "browser": true
+    },
+    "extends": "eslint:recommended",
+    "ecmaFeatures": {
+        "jsx": true,
+        "experimentalObjectRestSpread": true,
+        "modules": true,
+        "blockBindings": true,
+        "destructuring": true,
+        "defaultParams": true,
+        "classes": true,
+    },
+    "plugins": []
+}
