@@ -1,26 +1,30 @@
-import Rosco, {IdChangedError} from '../src/index';
+import Model, {IdChangedError} from '../src/index';
 import {expect} from 'chai';
 
-describe('Rosco', function(){
+describe('Model', function(){
 
-  class User extends Rosco{
+  class User extends Model{
     constructor(data={}){
       const schema = {
-        id: Rosco.INTEGER,
-        name: Rosco.STRING
+        id: Model.INTEGER,
+        name: Model.STRING
       };
       super({schema, data});
     }
   }
 
-  class ProfileImage extends Rosco{
+  class ProfileImage extends Model{
     constructor(data={}){
       const schema = {
-        imageUrl: Rosco.STRING
+        imageUrl: Model.STRING
       };
-      const relations = {
-        userId: User
-      };
+      const relations = [
+        {
+          model: User,
+          // attribute: 'userId'
+          association: 'User'
+        }
+      ];
       super({schema, relations, data});
     }
   }
@@ -31,8 +35,9 @@ describe('Rosco', function(){
 
   it("can create a model", function(){
     expect(this.subject).to.be.instanceof(User);
-    expect(this.subject).to.be.instanceof(Rosco);
+    expect(this.subject).to.be.instanceof(Model);
   });
+
   describe('#isNewRecord', function(){
     it('defaults to an unsaved record', function(){
       const user = new User();
@@ -57,6 +62,30 @@ describe('Rosco', function(){
         subject.merge({id: 456});
       }).to.throw(IdChangedError);
       subject.merge({id: 123});
+    });
+  });
+
+  describe('relations', function(){
+    it('can be saved when there are no relations', function(){
+      const profileImage = new ProfileImage();
+      expect(profileImage.canBeSaved()).to.be.true
+    });
+    it('can be saved when the relation starts with an id', function(){
+      const user = new User({id: 865});
+      const profileImage = new ProfileImage({User: user});
+      expect(profileImage.canBeSaved()).to.be.true
+    });
+    it('returns false if the relation does not have an id', function(){
+      const user = new User
+      const profileImage = new ProfileImage({User: user});
+      expect(profileImage.canBeSaved()).to.be.false
+    });
+    it('can be saved when the relation gets an id', function(){
+      const user = new User
+      const profileImage = new ProfileImage({User: user});
+      expect(profileImage.canBeSaved()).to.be.false
+      user.merge({id: 973})
+      expect(profileImage.canBeSaved()).to.be.true
     });
   });
 

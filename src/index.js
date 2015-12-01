@@ -1,4 +1,4 @@
-import {Map} from 'immutable';
+import {Map, List} from 'immutable';
 import ExtendableError from './ExtendableError';
 
 const defaultOptions = Map({
@@ -23,16 +23,15 @@ function invalidIDChange(newData){
 }
 
 class Model {
-  constructor({schema, relations={}, options={}, data={}}) {
+  constructor({schema, relations=[], options={}, data={}}) {
     this._options = defaultOptions.merge(options);
     const idAtribute = this._options.get('idAtribute');
     this._schema = Map(schema);
-    this._relations = Map(relations);
+    this._relations = List(relations);
     const defaultData = Map({[idAtribute]: DEFAULT_ID});
     // console.log("Data", data)
     this._data = defaultData.merge(data);
   }
-
   merge(newData) {
     if (invalidIDChange.call(this, newData)){
       throw new IdChangedError("cannot change id attribute");
@@ -48,6 +47,14 @@ class Model {
   isNewRecord(){
     // console.log(this._data)
     return this._data.get(this._options.get('idAtribute')) === DEFAULT_ID;
+  }
+  canBeSaved(){
+    return this._relations.every( relation => {
+      const relationshipInstance = this.get(relation.association);
+      // console.log("relation", relationshipInstance)
+      if(!relationshipInstance){return true;}
+      return !relationshipInstance.isNewRecord();
+    });
   }
   isChanged(oldData){
     return oldData !== this._data;
