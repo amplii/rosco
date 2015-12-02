@@ -12,6 +12,17 @@ class IdChangedError extends ExtendableError {
     super(m);
   }
 }
+class IdAlreadySetError extends ExtendableError {
+  constructor(m) {
+    super(m);
+  }
+}
+
+class AlreadyCanBeCreatedError extends ExtendableError {
+  constructor(m) {
+    super(m);
+  }
+}
 
 function invalidIDChange(newData){
   const idAtribute = this._options.get('idAtribute');
@@ -37,15 +48,15 @@ function handleNewId(){
   this._events.set('onIdSet', List([]));
   callCallbacks.call(this, callbacks);
 }
-function handleCanBeSaved(){
-  const callbacks = this._events.get('onCanBeSaved');
-  this._events.set('onCanBeSaved', List([]));
+function handleCanBeCreated(){
+  const callbacks = this._events.get('onCanBeCreated');
+  this._events.set('onCanBeCreated', List([]));
   callCallbacks.call(this, callbacks);
 }
 
-function checkOnCanBeSaved(recentlySavedInstance){
-  if (!this.canBeSaved()) { return; }
-  handleCanBeSaved.call(this);
+function checkOnCanBeCreated(recentlySavedInstance){
+  if (!this.canBeCreated()) { return; }
+  handleCanBeCreated.call(this);
 }
 
 function addNewUnsavedRelationCallback(oldData){
@@ -57,7 +68,7 @@ function addNewUnsavedRelationCallback(oldData){
     if (!newRelationshipInstance) { return; }
     if (!newRelationshipInstance.isNewRecord()){ return; }
 
-    newRelationshipInstance.onIdSet(checkOnCanBeSaved.bind(this));
+    newRelationshipInstance.onIdSet(checkOnCanBeCreated.bind(this));
   });
 }
 
@@ -71,7 +82,7 @@ class Model {
     this._relations = List(relations);
     this._events = Map({
       onIdSet: List([]),
-      onCanBeSaved: List([])
+      onCanBeCreated: List([])
     });
 
     this._options = defaultOptions.merge(options);
@@ -103,14 +114,23 @@ class Model {
     return this.get(this._options.get('idAtribute')) === DEFAULT_ID;
   }
   onIdSet (callback) {
+    if (!this.isNewRecord()){
+      throw new IdAlreadySetError("cannot call onIdSet, id has already been set");
+    }
     const newOnIdSet = this._events.get('onIdSet').push(callback);
     this._events = this._events.set('onIdSet', newOnIdSet);
   }
-  onCanBeSaved (callback) {
-    const newOnCanBeSaved = this._events.get('onCanBeSaved').push(callback);
-    this._events = this._events.set('onCanBeSaved', newOnCanBeSaved);
+  onCanBeCreated (callback) {
+    if (!this.isNewRecord()){
+      throw new IdAlreadySetError("cannot call onCanBeCreated, id has already been set");
+    }
+    if (this.canBeCreated()){
+      throw new AlreadyCanBeCreatedError("cannot add callback when record can already be saved");
+    }
+    const newOnCanBeCreated = this._events.get('onCanBeCreated').push(callback);
+    this._events = this._events.set('onCanBeCreated', newOnCanBeCreated);
   }
-  canBeSaved(){
+  canBeCreated(){
     return this._relations.every( relation => {
       const relationshipInstance = this.get(relation.association);
       if (!relationshipInstance) { return true; }

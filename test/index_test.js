@@ -1,4 +1,4 @@
-import Model, {IdChangedError} from '../src/index';
+import Model, {IdChangedError, IdAlreadySetError, AlreadyCanBeCreatedError} from '../src/index';
 import {expect} from 'chai';
 
 describe('Model', function(){
@@ -64,6 +64,23 @@ describe('Model', function(){
       expect(user.isNewRecord()).to.be.false;
     });
 
+    it('will call a callback when the id is set', function(done){
+      const user = new User();
+      user.onIdSet(function(){
+        expect(this).to.equal(user)
+        done()
+      })
+      user.merge({id: 123});
+    });
+
+    it('will throw an error when adding a callback and the user already has an error', function(){
+      const user = new User();
+      user.merge({id: 123});
+      expect(function(){
+        user.onIdSet(function(){})
+      }).to.throw(IdAlreadySetError)
+    });
+
     it("can only mutate the id once", function(){
       const subject = this.subject;
       subject.merge({id: 123});
@@ -77,31 +94,31 @@ describe('Model', function(){
   describe('relations', function(){
     it('can be saved when there are no relations', function(){
       const profileImage = new ProfileImage();
-      expect(profileImage.canBeSaved()).to.be.true;
+      expect(profileImage.canBeCreated()).to.be.true;
     });
     it('can be saved when the relation starts with an id', function(){
       const user = new User({id: 865});
       const profileImage = new ProfileImage({User: user});
-      expect(profileImage.canBeSaved()).to.be.true;
+      expect(profileImage.canBeCreated()).to.be.true;
     });
     it('returns false if the relation does not have an id', function(){
       const user = new User;
       const profileImage = new ProfileImage({User: user});
-      expect(profileImage.canBeSaved()).to.be.false;
+      expect(profileImage.canBeCreated()).to.be.false;
     });
     it('can be saved when the relation gets an id', function(){
       const user = new User;
       const profileImage = new ProfileImage({User: user});
-      expect(profileImage.canBeSaved()).to.be.false;
+      expect(profileImage.canBeCreated()).to.be.false;
       user.merge({id: 973});
-      expect(profileImage.canBeSaved()).to.be.true;
+      expect(profileImage.canBeCreated()).to.be.true;
     });
 
     it('emits an event when the relation can now be saved', function(done){
       const user = new User;
       const profileImage = new ProfileImage({User: user});
 
-      profileImage.onCanBeSaved(function(){
+      profileImage.onCanBeCreated(function(){
         expect(this).to.equal(profileImage);
         done();
       });
@@ -114,12 +131,29 @@ describe('Model', function(){
       const image = new Image;
       const profileImage = new ProfileImage({User: user, Image: image});
 
-      profileImage.onCanBeSaved(function(){
+      profileImage.onCanBeCreated(function(){
         done();
       });
 
       user.merge({id: 973});
       image.merge({id: 565});
+    });
+
+    it('throws an error when the profile can be created and a callback is set', function(){
+      const profileImage = new ProfileImage({});
+
+      expect(function(){
+        profileImage.onCanBeCreated(function(){});
+      }).to.throw(AlreadyCanBeCreatedError);
+
+    });
+
+    it('throws an error when the profile already has an id and a callback is set', function(){
+      const profileImage = new ProfileImage({id: 123});
+
+      expect(function(){
+        profileImage.onCanBeCreated(function(){});
+      }).to.throw(IdAlreadySetError);
     });
   });
 
