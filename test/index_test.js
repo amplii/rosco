@@ -110,26 +110,26 @@ describe('Model', function(){
     it('passes in any new profile images and clears new records', function(done){
       const user = new User;
       const profileImage = new ProfileImage({data: {User: user}});
-      let callCount = 0
+      let callCount = 0;
       profileImage.onCanBeCreated(function(newProfileImage){
         expect(newProfileImage).not.to.equal(profileImage);
-        expect(profileImage.canBeCreated()).to.be.false
-        expect(newProfileImage.canBeCreated()).to.be.true
+        expect(profileImage.canBeCreated()).to.be.false;
+        expect(newProfileImage.canBeCreated()).to.be.true;
 
         callCount += 1;
         if (callCount === 1){
-          expect(newProfileImage.get('name')).to.equal('new profileImageName')
+          expect(newProfileImage.get('name')).to.equal('new profileImageName');
           expect(this).to.equal(newProfileImage1);
         }
         if (callCount === 2){
-          expect(newProfileImage.get('name')).to.equal('new profileImageName2')
+          expect(newProfileImage.get('name')).to.equal('new profileImageName2');
           expect(this).to.equal(newProfileImage2);
           done();
         }
       });
 
-      const newProfileImage1 = profileImage.merge({name: "new profileImageName"})
-      const newProfileImage2 = profileImage.merge({name: "new profileImageName2"})
+      const newProfileImage1 = profileImage.merge({name: "new profileImageName"});
+      const newProfileImage2 = profileImage.merge({name: "new profileImageName2"});
 
       user.merge({id: 973});
     });

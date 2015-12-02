@@ -109,7 +109,7 @@ class Model {
     const defaultData = Map({[idAtribute]: DEFAULT_ID});
     // console.log("HELLOOOO", schema, data)
     this._data = defaultData.merge(data);
-    this._relationshipJustReceivedId = relationshipJustReceivedId.bind(this)
+    this._relationshipJustReceivedId = relationshipJustReceivedId.bind(this);
     processNewData.call(this, defaultData);
   }
 
@@ -131,7 +131,7 @@ class Model {
     };
     // console.log("Setting new data returning new model", newRecordData);
     const record = new SubClass(newSubclassParams);
-    removeOldAssociationCallbacks.call(this)
+    removeOldAssociationCallbacks.call(this);
     if (isIdSet.call(record, this._data)){
       const self = this;
       setTimeout(function(){
