@@ -13,17 +13,26 @@ describe('Model', function(){
     }
   }
 
+  class Image extends Model{
+    constructor(data={}){
+      const schema = {
+        id: Model.INTEGER,
+        url: Model.STRING
+      };
+      super({schema, data});
+    }
+  }
+
   class ProfileImage extends Model{
     constructor(data={}){
       const schema = {
-        imageUrl: Model.STRING
+        id: Model.INTEGER,
+        imageId: Model.INTEGER,
+        userId: Model.INTEGER
       };
       const relations = [
-        {
-          model: User,
-          // attribute: 'userId'
-          association: 'User'
-        }
+        {model: User, association: 'User'},
+        {model: Image, association: 'Image'}
       ];
       super({schema, relations, data});
     }
@@ -41,18 +50,18 @@ describe('Model', function(){
   describe('#isNewRecord', function(){
     it('defaults to an unsaved record', function(){
       const user = new User();
-      expect(user.isNewRecord()).to.be.true
+      expect(user.isNewRecord()).to.be.true;
     });
 
     it('is not a new record when given an id from the beginning', function(){
       const user = new User({id: 123});
-      expect(user.isNewRecord()).to.be.false
+      expect(user.isNewRecord()).to.be.false;
     });
 
     it('is not a new record an id is set', function(){
       const user = new User();
-      user.merge({id: 123})
-      expect(user.isNewRecord()).to.be.false
+      user.merge({id: 123});
+      expect(user.isNewRecord()).to.be.false;
     });
 
     it("can only mutate the id once", function(){
@@ -68,24 +77,49 @@ describe('Model', function(){
   describe('relations', function(){
     it('can be saved when there are no relations', function(){
       const profileImage = new ProfileImage();
-      expect(profileImage.canBeSaved()).to.be.true
+      expect(profileImage.canBeSaved()).to.be.true;
     });
     it('can be saved when the relation starts with an id', function(){
       const user = new User({id: 865});
       const profileImage = new ProfileImage({User: user});
-      expect(profileImage.canBeSaved()).to.be.true
+      expect(profileImage.canBeSaved()).to.be.true;
     });
     it('returns false if the relation does not have an id', function(){
-      const user = new User
+      const user = new User;
       const profileImage = new ProfileImage({User: user});
-      expect(profileImage.canBeSaved()).to.be.false
+      expect(profileImage.canBeSaved()).to.be.false;
     });
     it('can be saved when the relation gets an id', function(){
-      const user = new User
+      const user = new User;
       const profileImage = new ProfileImage({User: user});
-      expect(profileImage.canBeSaved()).to.be.false
-      user.merge({id: 973})
-      expect(profileImage.canBeSaved()).to.be.true
+      expect(profileImage.canBeSaved()).to.be.false;
+      user.merge({id: 973});
+      expect(profileImage.canBeSaved()).to.be.true;
+    });
+
+    it('emits an event when the relation can now be saved', function(done){
+      const user = new User;
+      const profileImage = new ProfileImage({User: user});
+
+      profileImage.onCanBeSaved(function(){
+        expect(this).to.equal(profileImage);
+        done();
+      });
+
+      user.merge({id: 973});
+    });
+
+    it('emits an event when the relation can now be saved with two relations', function(done){
+      const user = new User;
+      const image = new Image;
+      const profileImage = new ProfileImage({User: user, Image: image});
+
+      profileImage.onCanBeSaved(function(){
+        done();
+      });
+
+      user.merge({id: 973});
+      image.merge({id: 565});
     });
   });
 
