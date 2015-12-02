@@ -57,13 +57,12 @@ const profile = new Profile({User: user});
 ```js
 const user = new User({email: 'ada@lovelace.com'});
 const email = user.get('email') // ada@lovelace.com;
-const oldData = user.getData();
-user.merge({email: 'countess@lovelace.com'});
-user.isChanged(oldData); // => true
 
-const oldData2 = user.getData();
-user.merge({email: 'countess@lovelace.com'});
-user.isChanged(oldData); // => false
+const newUser = user.merge({email: 'countess@lovelace.com'});
+newUser === user; // => false
+
+const newUser2 = user.merge({email: 'countess@lovelace.com'});
+newUser2 === newUser; // => true
 ```
 
 ```js
@@ -82,11 +81,32 @@ profile.canBeCreated(); // => false (would be true if there was no user record i
 console.log("log 1");
 profile.onCanBeCreated(function(){
   // this === profile
-  console.log("log 3");
+  console.log("log 4");
 });
 console.log("log 2");
 user.merge({id: 1});
-console.log("log 4");
+console.log("log 3");
+```
+
+The callbacks are passed into the new records that are created and the old record callbacks will no longer be called. This may feel weird that a callback is being set on a record and it may actually be executed on a different record. But it's the only way the callback is actually useful. It's no fun to re-add the callback over and over again, and then deal with all the stale record callbacks being executed.
+
+```js
+const user = new User({email: 'ada@lovelace.com'});
+const profile = new Profile({User: user});
+user.canBeCreated(); // => true
+profile.canBeCreated(); // => false (would be true if there was no user record in data)
+console.log("log 1");
+profile.onCanBeCreated(function(newProfile){
+  // this === newProfile
+  // newProfile !== profile
+  // profile.canBeCreated() === false
+  // newProfile.canBeCreated() === true
+  console.log("log 4");
+});
+console.log("log 2");
+const newProfile = profile.update({name: 'Ada Lovelace'})
+user.merge({id: 1});
+console.log("log 3");
 ```
 
 ### Todo

@@ -11,7 +11,8 @@
     "globals": {
       "describe": true,
       "it": true,
-      "beforeEach": true
+      "beforeEach": true,
+      "context": true
     },
     "env": {
         "es6": true,
