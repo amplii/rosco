@@ -12,6 +12,7 @@ class IdChangedError extends ExtendableError {
     super(m);
   }
 }
+
 class IdAlreadySetError extends ExtendableError {
   constructor(m) {
     super(m);
@@ -32,6 +33,7 @@ function invalidIDChange(newData){
   if (!newId){return;}
   return existingId !== newId;
 }
+
 function callCallbacks(callbacks){
   callbacks.forEach( callback => {
     callback.call(this, this);
@@ -48,6 +50,7 @@ function handleNewId(){
   this._events.set('onIdSet', List([]));
   callCallbacks.call(this, callbacks);
 }
+
 function handleCanBeCreated(){
   const callbacks = this._events.get('onCanBeCreated');
   this._events.set('onCanBeCreated', List([]));
