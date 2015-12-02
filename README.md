@@ -18,7 +18,7 @@ Define models using es6 classes. All examples will assume these models.
 import Model from 'rosco';
 
 class User extends Model {
-  constructor (data={}){
+  constructor(data={}) {
     const schema = {
       id: Model.INTEGER,
       email: Model.STRING
@@ -29,7 +29,7 @@ class User extends Model {
 
 
 class Profile extends Model {
-  constructor (data={}){
+  constructor(data={}) {
     const schema = {
       id: Model.INTEGER,
       userId: Model.INTEGER,
