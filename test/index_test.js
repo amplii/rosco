@@ -1,43 +1,8 @@
 import Model, {IdChangedError, IdAlreadySetError, AlreadyCanBeCreatedError} from '../src/index';
 import {expect} from 'chai';
+import {User, Image, ProfileImage} from './fixtures/models'
 
 describe('Model', function(){
-
-  class User extends Model{
-    constructor(data={}){
-      const schema = {
-        id: Model.INTEGER,
-        name: Model.STRING
-      };
-      super({schema, data});
-    }
-  }
-
-  class Image extends Model{
-    constructor(data={}){
-      const schema = {
-        id: Model.INTEGER,
-        url: Model.STRING
-      };
-      super({schema, data});
-    }
-  }
-
-  class ProfileImage extends Model{
-    constructor(data={}){
-      const schema = {
-        id: Model.INTEGER,
-        imageId: Model.INTEGER,
-        userId: Model.INTEGER,
-        name: Model.STRING
-      };
-      const relations = [
-        {model: User, association: 'User'},
-        {model: Image, association: 'Image'}
-      ];
-      super({schema, relations, data});
-    }
-  }
 
   beforeEach(function(){
     this.subject = new User();
