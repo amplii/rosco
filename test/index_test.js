@@ -28,7 +28,8 @@ describe('Model', function(){
       const schema = {
         id: Model.INTEGER,
         imageId: Model.INTEGER,
-        userId: Model.INTEGER
+        userId: Model.INTEGER,
+        name: Model.STRING
       };
       const relations = [
         {model: User, association: 'User'},
@@ -64,6 +65,17 @@ describe('Model', function(){
       expect(user.isNewRecord()).to.be.false;
     });
 
+    it("can only mutate the id once", function(){
+      const subject = this.subject;
+      subject.merge({id: 123});
+      expect(function(){
+        subject.merge({id: 456});
+      }).to.throw(IdChangedError);
+      subject.merge({id: 123});
+    });
+  });
+
+  describe('#onIdSet', function(){
     it('will call a callback when the id is set', function(done){
       const user = new User();
       user.onIdSet(function(){
@@ -80,18 +92,9 @@ describe('Model', function(){
         user.onIdSet(function(){});
       }).to.throw(IdAlreadySetError);
     });
-
-    it("can only mutate the id once", function(){
-      const subject = this.subject;
-      subject.merge({id: 123});
-      expect(function(){
-        subject.merge({id: 456});
-      }).to.throw(IdChangedError);
-      subject.merge({id: 123});
-    });
   });
 
-  describe('relations', function(){
+  context('relations', function(){
     it('can be saved when there are no relations', function(){
       const profileImage = new ProfileImage();
       expect(profileImage.canBeCreated()).to.be.true;
@@ -113,7 +116,9 @@ describe('Model', function(){
       user.merge({id: 973});
       expect(profileImage.canBeCreated()).to.be.true;
     });
+  });
 
+  describe('#onCanBeCreated', function(){
     it('emits an event when the relation can now be saved', function(done){
       const user = new User;
       const profileImage = new ProfileImage({User: user});
@@ -172,6 +177,26 @@ describe('Model', function(){
       this.subject.merge({name: 'Piggy'});
       expect(this.subject.isChanged(data2)).to.be.false;
     });
-
   });
+
+  describe("#toObject", function(){
+    it("returns json", function(){
+      this.subject.merge({id: 123, name: 'Piggy'});
+      const value = this.subject.toObject()
+      expect(value).to.deep.equal({id: 123, name: 'Piggy'});
+    });
+
+    it("does not return an id when one is not set", function(){
+      this.subject.merge({name: 'Piggy'});
+      const value = this.subject.toObject()
+      expect(value).to.deep.equal({name: 'Piggy'});
+    });
+
+    it("does not return the relations", function(){
+      const profileImage = new ProfileImage({User: this.subject, name: "Fun picture"});
+
+      const value = profileImage.toObject()
+      expect(value).to.deep.equal({name: 'Fun picture'});
+    });
+  })
 });
