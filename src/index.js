@@ -104,15 +104,19 @@ class Model {
       handleNewId.call(this);
     }
   }
+
   get(key) {
     return this._data.get(key);
   }
+
   getData() {
     return this._data;
   }
+
   isNewRecord(){
     return this.get(this._options.get('idAtribute')) === DEFAULT_ID;
   }
+
   onIdSet (callback) {
     if (!this.isNewRecord()){
       throw new IdAlreadySetError("cannot call onIdSet, id has already been set");
@@ -120,6 +124,7 @@ class Model {
     const newOnIdSet = this._events.get('onIdSet').push(callback);
     this._events = this._events.set('onIdSet', newOnIdSet);
   }
+
   onCanBeCreated (callback) {
     if (!this.isNewRecord()){
       throw new IdAlreadySetError("cannot call onCanBeCreated, id has already been set");
@@ -127,9 +132,11 @@ class Model {
     if (this.canBeCreated()){
       throw new AlreadyCanBeCreatedError("cannot add callback when record can already be saved");
     }
+
     const newOnCanBeCreated = this._events.get('onCanBeCreated').push(callback);
     this._events = this._events.set('onCanBeCreated', newOnCanBeCreated);
   }
+
   canBeCreated(){
     return this._relations.every( relation => {
       const relationshipInstance = this.get(relation.association);
@@ -137,6 +144,7 @@ class Model {
       return !relationshipInstance.isNewRecord();
     });
   }
+
   isChanged(oldData){
     return oldData !== this._data;
   }

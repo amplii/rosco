@@ -67,9 +67,9 @@ describe('Model', function(){
     it('will call a callback when the id is set', function(done){
       const user = new User();
       user.onIdSet(function(){
-        expect(this).to.equal(user)
-        done()
-      })
+        expect(this).to.equal(user);
+        done();
+      });
       user.merge({id: 123});
     });
 
@@ -77,8 +77,8 @@ describe('Model', function(){
       const user = new User();
       user.merge({id: 123});
       expect(function(){
-        user.onIdSet(function(){})
-      }).to.throw(IdAlreadySetError)
+        user.onIdSet(function(){});
+      }).to.throw(IdAlreadySetError);
     });
 
     it("can only mutate the id once", function(){
