@@ -55,8 +55,8 @@ const profile = new Profile({User: user});
 #### Getting / Setting data
 
 ```js
-const user = new User({email: 'Ada Lovelace'});
-const email = user.get('email');
+const user = new User({email: 'ada@lovelace.com'});
+const email = user.get('email') // ada@lovelace.com;
 const oldData = user.getData();
 user.merge({email: 'countess@lovelace.com'});
 user.isChanged(oldData); // => true
