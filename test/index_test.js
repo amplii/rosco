@@ -144,23 +144,23 @@ describe('Model', function(){
     });
   });
 
-  describe("#toObject", function(){
+  describe("#toJS", function(){
     it("returns json", function(){
       this.subject.merge({id: 123, name: 'Piggy'});
-      const value = this.subject.toObject()
+      const value = this.subject.toJS()
       expect(value).to.deep.equal({id: 123, name: 'Piggy'});
     });
 
     it("does not return an id when one is not set", function(){
       this.subject.merge({name: 'Piggy'});
-      const value = this.subject.toObject()
+      const value = this.subject.toJS()
       expect(value).to.deep.equal({name: 'Piggy'});
     });
 
     it("does not return the relations", function(){
       const profileImage = new ProfileImage({User: this.subject, name: "Fun picture"});
 
-      const value = profileImage.toObject()
+      const value = profileImage.toJS()
       expect(value).to.deep.equal({name: 'Fun picture'});
     });
   })

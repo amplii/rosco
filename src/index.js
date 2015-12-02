@@ -149,8 +149,8 @@ class Model {
     return oldData !== this._data;
   }
 
-  toObject (){
-    let result = this._data.toJSON();
+  toJS (){
+    let result = this._data.toJS();
     const idAtribute = this._options.get('idAtribute')
     if (result[idAtribute] == DEFAULT_ID) { delete result[idAtribute]; }
     this._relations.forEach( relation => {
