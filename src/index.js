@@ -166,6 +166,10 @@ class Model {
     return this._data.get(key);
   }
 
+  id() {
+    return this.get(this._options.get('idAtribute'));
+  }
+
   getData() {
     return this._data;
   }

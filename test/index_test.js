@@ -189,6 +189,16 @@ describe('Model', function(){
     });
   });
 
+  describe("#id", function(){
+    it('returns a negative value for a new record', function(){
+      expect(this.subject.id()).to.be.lt(0);
+    });
+    it('returns the value when set', function(){
+      const newUser = this.subject.merge({id: 123});
+      expect(newUser.id()).to.equal(123);
+    });
+  });
+
   describe("#toJS", function(){
     it("returns json", function(){
       const newRecord = this.subject.merge({id: 123, name: 'Piggy'});
