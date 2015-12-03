@@ -60,6 +60,27 @@ describe('Model', function(){
     });
   });
 
+  describe('#onIdSetOrNow', function(){
+    it('will call a callback when the id is set', function(done){
+      const user = new User();
+      user.onIdSetOrNow(function(){
+        expect(this).to.equal(newUser);
+        expect(this).not.to.equal(user);
+        done();
+      });
+      const newUser = user.merge({id: 123});
+    });
+
+    it('will call immediatly when the user already has an id', function(done){
+      const user = new User({data:{id: 123}});
+      user.onIdSetOrNow(function(thisUser){
+        expect(this).to.equal(user);
+        expect(user).to.equal(thisUser);
+        done();
+      });
+    });
+  });
+
   context('relations', function(){
     it('can be saved when there are no relations', function(){
       const profileImage = new ProfileImage();
@@ -180,11 +201,6 @@ describe('Model', function(){
       expect(newRecord.get('name')).to.equal('Piggy');
     });
 
-    it("will coerse values to their schema definitions", function(){
-      const newRecord = this.subject.merge({id: '123'});
-      expect(newRecord.get('id')).to.equal(123);
-    });
-
     it("will not overwrite the old model", function(){
       this.subject.merge({name: 'Piggy'});
       expect(this.subject.get('name')).to.be.undefined;
@@ -206,6 +222,18 @@ describe('Model', function(){
     it('returns the value when set', function(){
       const newUser = this.subject.merge({id: 123});
       expect(newUser.id()).to.equal(123);
+    });
+
+    it('can take an unsaved flag for the id', function(){
+      const user = new User({data: {id: 123}, options: {isTempId: true}});
+      expect(user.id()).to.equal(123);
+      expect(user.isNewRecord()).to.be.true;
+    });
+
+    it('can update an unsaved id', function(){
+      const user = new User({data: {id: 123}, options: {isTempId: true}});
+      const newUser = user.merge({id: 321}, {isTempId: false});
+      expect(newUser.isNewRecord()).to.be.false;
     });
   });
 

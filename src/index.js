@@ -2,7 +2,8 @@ import {Map, List} from 'immutable';
 import ExtendableError from './ExtendableError';
 
 const defaultOptions = Map({
-  idAtribute: "id"
+  idAtribute: "id",
+  isTempId: false
 });
 
 let CURRENT_UNKNOWN_ID = -1;
@@ -41,9 +42,9 @@ function isSavedId(id){
 function invalidIDChange(newData){
   const idAtribute = this._options.get('idAtribute');
   const existingId = this.get(idAtribute);
-  if (isUnsavedId(existingId)) { return; }
+  if (this.isNewRecord()) { return; }
   const newId = newData[idAtribute];
-  if (!newId){return;}
+  if (!newId) { return; }
   return existingId !== newId;
 }
 
@@ -54,9 +55,8 @@ function callCallbacks(callbacks, args=[]){
   });
 }
 
-function isIdSet(oldRecordData){
-  const idAtribute = this._options.get('idAtribute');
-  return isUnsavedId(oldRecordData.get(idAtribute)) && isSavedId(this.get(idAtribute));
+function isIdSet(oldRecord){
+  return oldRecord.isNewRecord() && !this.isNewRecord();
 }
 
 function handleNewId(oldRecord){
@@ -110,16 +110,6 @@ function removeOldAssociationCallbacks(){
   });
 }
 
-function coerseNewData(){
-  this._schema.forEach( (AttributeType, attributeName) => {
-    const currentValue = this._data.get(attributeName);
-    if(!currentValue){return;}
-    const alreadyCoersed = typeof currentValue === AttributeType.name.toLowerCase();
-    if (alreadyCoersed) { return ; }
-    this._data = this._data.set(attributeName, AttributeType(currentValue));
-  });
-}
-
 function overwriteAssociationAttributeWithAssocitionId(associationDefintion){
   const associationName = associationDefintion.association;
   const associationAttribute = associationDefintion.attribute;
@@ -153,11 +143,10 @@ class Model {
     this._data = defaultData.merge(data);
 
     populateRelationData.call(this);
-    coerseNewData.call(this);
     processNewData.call(this, defaultData);
   }
 
-  merge(newData) {
+  merge(newData, options={}) {
     if (invalidIDChange.call(this, newData)){
       throw new IdChangedError("cannot change id attribute");
     }
@@ -168,12 +157,12 @@ class Model {
       schema: this._schema,
       relations: this._relations,
       data: newRecordData,
-      options: this._options,
+      options: this._options.merge(options),
       events: this._events
     };
     const record = new SubClass(newSubclassParams);
     removeOldAssociationCallbacks.call(this);
-    if (isIdSet.call(record, this._data)){
+    if (isIdSet.call(record, this)){
       const self = this;
       setTimeout(function(){
         handleNewId.call(record, self);
@@ -195,6 +184,7 @@ class Model {
   }
 
   isNewRecord(){
+    if (this._options.get('isTempId')) { return true; }
     const idAtribute = this._options.get('idAtribute');
     return isUnsavedId(this.get(idAtribute));
   }
@@ -205,6 +195,17 @@ class Model {
     }
     const newOnIdSet = this._events.get('onIdSet').push(callback);
     this._events = this._events.set('onIdSet', newOnIdSet);
+  }
+
+  onIdSetOrNow (callback) {
+    if (this.isNewRecord()) {
+      return this.onIdSet(callback);
+    }
+    // execute now
+    return setTimeout( ()=> {
+      callCallbacks.call(this, [callback]);
+    });
+
   }
 
   clearOnIdSet (callback) {
@@ -242,13 +243,13 @@ class Model {
   toJS (){
     const result = this._data.toJS();
     const idAtribute = this._options.get('idAtribute');
-    if (isUnsavedId(result[idAtribute])) { delete result[idAtribute]; }
+    if (this.isNewRecord()) { delete result[idAtribute]; }
     this._relations.forEach( relation => {
       delete result[relation.association];
 
       if (relation.attribute){
-        const relationId = result[relation.attribute];
-        if (isUnsavedId(relationId)) {delete result[relation.attribute];}
+        const relationshipInstance = this.get(relation.association);
+        if (relationshipInstance.isNewRecord()) {delete result[relation.attribute];}
       }
     });
     return result;
