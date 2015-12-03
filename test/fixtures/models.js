@@ -3,7 +3,7 @@ import Model from '../../src/index';
 export class User extends Model{
   constructor(options={}){
     options.schema = {
-      id: Model.INTEGER,
+      id: Model.NUMBER,
       name: Model.STRING
     };
     super(options);
@@ -13,7 +13,7 @@ export class User extends Model{
 export class Image extends Model{
   constructor(options={}){
     options.schema = {
-      id: Model.INTEGER,
+      id: Model.NUMBER,
       url: Model.STRING
     };
     super(options);
@@ -23,9 +23,9 @@ export class Image extends Model{
 export class ProfileImage extends Model{
   constructor(options={}){
     options.schema = {
-      id: Model.INTEGER,
-      imageId: Model.INTEGER,
-      userId: Model.INTEGER,
+      id: Model.NUMBER,
+      imageId: Model.NUMBER,
+      userId: Model.NUMBER,
       name: Model.STRING
     };
 

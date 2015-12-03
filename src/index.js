@@ -5,7 +5,7 @@ const defaultOptions = Map({
   idAtribute: "id"
 });
 
-const DEFAULT_ID = -1;
+let CURRENT_UNKNOWN_ID = -1;
 
 class IdChangedError extends ExtendableError {
   constructor(m) {
@@ -25,10 +25,23 @@ class AlreadyCanBeCreatedError extends ExtendableError {
   }
 }
 
+function createUnsavedId(){
+  CURRENT_UNKNOWN_ID -= 1;
+  return CURRENT_UNKNOWN_ID;
+}
+
+function isUnsavedId(id){
+  return id < 0;
+}
+
+function isSavedId(id){
+  return !isUnsavedId(id);
+}
+
 function invalidIDChange(newData){
   const idAtribute = this._options.get('idAtribute');
   const existingId = this.get(idAtribute);
-  if (existingId === DEFAULT_ID) { return; }
+  if (isUnsavedId(existingId)) { return; }
   const newId = newData[idAtribute];
   if (!newId){return;}
   return existingId !== newId;
@@ -44,7 +57,7 @@ function callCallbacks(callbacks, args=[]){
 
 function isIdSet(oldRecordData){
   const idAtribute = this._options.get('idAtribute');
-  return oldRecordData.get(idAtribute) === DEFAULT_ID && this.get(idAtribute) !== DEFAULT_ID;
+  return isUnsavedId(oldRecordData.get(idAtribute)) && isSavedId(this.get(idAtribute));
 }
 
 function handleNewId(oldRecord){
@@ -106,9 +119,17 @@ class Model {
 
     this._options = defaultOptions.merge(options);
     const idAtribute = this._options.get('idAtribute');
-    const defaultData = Map({[idAtribute]: DEFAULT_ID});
-    // console.log("HELLOOOO", schema, data)
+    const defaultData = Map({[idAtribute]: createUnsavedId()});
+
     this._data = defaultData.merge(data);
+    this._schema.forEach( (AttributeType, attributeName) => {
+      const currentValue = this._data.get(attributeName);
+      if(!currentValue){return;}
+      const alreadyCoersed = typeof currentValue === AttributeType.name.toLowerCase();
+      if (alreadyCoersed) { return ; }
+      this._data = this._data.set(attributeName, AttributeType(currentValue));
+    });
+
     this._relationshipJustReceivedId = relationshipJustReceivedId.bind(this);
     processNewData.call(this, defaultData);
   }
@@ -150,7 +171,8 @@ class Model {
   }
 
   isNewRecord(){
-    return this.get(this._options.get('idAtribute')) === DEFAULT_ID;
+    const idAtribute = this._options.get('idAtribute');
+    return isUnsavedId(this.get(idAtribute));
   }
 
   onIdSet (callback) {
@@ -196,7 +218,7 @@ class Model {
   toJS (){
     const result = this._data.toJS();
     const idAtribute = this._options.get('idAtribute');
-    if (result[idAtribute] == DEFAULT_ID) { delete result[idAtribute]; }
+    if (isUnsavedId(result[idAtribute])) { delete result[idAtribute]; }
     this._relations.forEach( relation => {
       delete result[relation.association];
     });
@@ -204,7 +226,7 @@ class Model {
   }
 }
 
-Model.STRING = "A STRING";
-Model.INTEGER = "AN INTEGER";
+Model.STRING = String;
+Model.NUMBER = Number;
 
 export default Model;

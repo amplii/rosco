@@ -170,6 +170,12 @@ describe('Model', function(){
       const newRecord = this.subject.merge({name: 'Piggy'});
       expect(newRecord.get('name')).to.equal('Piggy');
     });
+
+    it("will coerse values to their schema definitions", function(){
+      const newRecord = this.subject.merge({id: '123'});
+      expect(newRecord.get('id')).to.equal(123);
+    });
+
     it("will not overwrite the old model", function(){
       this.subject.merge({name: 'Piggy'});
       expect(this.subject.get('name')).to.be.undefined;
