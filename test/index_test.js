@@ -65,10 +65,17 @@ describe('Model', function(){
       const profileImage = new ProfileImage();
       expect(profileImage.canBeCreated()).to.be.true;
     });
+
     it('can be saved when the relation starts with an id', function(){
       const user = new User({data: {id: 865}});
       const profileImage = new ProfileImage({data: {User: user}});
       expect(profileImage.canBeCreated()).to.be.true;
+    });
+
+    it('extracts the id from the relation', function(){
+      const user = new User({data: {id: 865}});
+      const profileImage = new ProfileImage({data: {User: user}});
+      expect(profileImage.get('userId')).to.equal(865);
     });
 
     it('returns false if the relation does not have an id', function(){
@@ -76,6 +83,7 @@ describe('Model', function(){
       const profileImage = new ProfileImage({data: {User: user}});
       expect(profileImage.canBeCreated()).to.be.false;
     });
+
     it('can be saved when the relation gets an id', function(done){
       const user = new User;
       const profileImage = new ProfileImage({data: {User: user}});
@@ -87,6 +95,7 @@ describe('Model', function(){
         expect(newUserRecord.isNewRecord()).to.be.false;
         expect(oldUserRecord.isNewRecord()).to.be.true;
         expect(profileImage.canBeCreated()).to.be.true;
+        expect(profileImage.get('userId')).to.equal(973);
         done();
       });
       const newUser = user.merge({id: 973});
@@ -193,6 +202,7 @@ describe('Model', function(){
     it('returns a negative value for a new record', function(){
       expect(this.subject.id()).to.be.lt(0);
     });
+
     it('returns the value when set', function(){
       const newUser = this.subject.merge({id: 123});
       expect(newUser.id()).to.equal(123);
@@ -210,9 +220,15 @@ describe('Model', function(){
       expect(newRecord.toJS()).to.deep.equal({name: 'Piggy'});
     });
 
-    it("does not return the relations", function(){
+    it("does not return the relations when unsaved", function(){
       const profileImage = new ProfileImage({data: {User: this.subject, name: "Fun picture"}});
       expect(profileImage.toJS()).to.deep.equal({name: 'Fun picture'});
+    });
+
+    it("does return the relations when saved", function(){
+      const newUser = this.subject.merge({id: 123});
+      const profileImage = new ProfileImage({data: {User: newUser, name: "Fun picture"}});
+      expect(profileImage.toJS()).to.deep.equal({name: 'Fun picture', userId: 123});
     });
   });
 });

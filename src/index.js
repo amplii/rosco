@@ -35,7 +35,7 @@ function isUnsavedId(id){
 }
 
 function isSavedId(id){
-  return !isUnsavedId(id);
+  return id != null && !isUnsavedId(id);
 }
 
 function invalidIDChange(newData){
@@ -48,7 +48,6 @@ function invalidIDChange(newData){
 }
 
 function callCallbacks(callbacks, args=[]){
-  // console.log("callCallbacks", args)
   const callArgs = [this].concat(args);
   callbacks.forEach( callback => {
     callback.apply(this, callArgs);
@@ -61,7 +60,6 @@ function isIdSet(oldRecordData){
 }
 
 function handleNewId(oldRecord){
-  // console.log("handleNewId", oldRecord)
   const callbacks = this._events.get('onIdSet');
   this._events.set('onIdSet', List([]));
   callCallbacks.call(this, callbacks, [oldRecord]);
@@ -73,26 +71,30 @@ function handleCanBeCreated(){
   callCallbacks.call(this, callbacks);
 }
 
-function relationshipJustReceivedId(recentlySavedInstance, oldInstance){
-  // console.log("CHECKING", {recentlySavedInstance, oldInstance})
+function relationshipJustReceivedId(recentlySavedInstance, oldInstance, relation){
   const relationshipKey = this._data.keyOf(oldInstance);
-  // console.log("FOUND", relationshipKey)
   this._data = this._data.set(relationshipKey, recentlySavedInstance);
+  overwriteAssociationAttributeWithAssocitionId.call(this, relation);
   if (!this.canBeCreated()) { return; }
   handleCanBeCreated.call(this);
 }
 
 function addNewUnsavedRelationCallback(oldData){
-  this._relations.forEach( relation => {
+  this._relations = this._relations.map( relation => {
     const oldRelationshipInstance = oldData.get(relation.association);
-    if (oldRelationshipInstance) { return; }
+    if (oldRelationshipInstance) { return relation; }
 
     const newRelationshipInstance = this.get(relation.association);
-    if (!newRelationshipInstance) { return; }
-    // console.log("HELLO NEW ASSOCIATION", newRelationshipInstance)
-    if (!newRelationshipInstance.isNewRecord()){ return; }
+    if (!newRelationshipInstance) { return relation; }
+    if (!newRelationshipInstance.isNewRecord()){ return relation; }
 
-    newRelationshipInstance.onIdSet(this._relationshipJustReceivedId);
+    const relationOnIdSet = (recentlySavedInstance, oldInstance) => {
+      relationshipJustReceivedId.call(this, recentlySavedInstance, oldInstance, relation);
+    };
+    relation.onIdSetCallback = relationOnIdSet;
+
+    newRelationshipInstance.onIdSet(relationOnIdSet);
+    return relation;
   });
 }
 
@@ -104,8 +106,35 @@ function removeOldAssociationCallbacks(){
   this._relations.forEach( relation => {
     const newRelationshipInstance = this.get(relation.association);
     if (!newRelationshipInstance) { return; }
-    newRelationshipInstance.clearOnIdSet(this._relationshipJustReceivedId);
+    newRelationshipInstance.clearOnIdSet(relation.onIdSetCallback);
   });
+}
+
+function coerseNewData(){
+  this._schema.forEach( (AttributeType, attributeName) => {
+    const currentValue = this._data.get(attributeName);
+    if(!currentValue){return;}
+    const alreadyCoersed = typeof currentValue === AttributeType.name.toLowerCase();
+    if (alreadyCoersed) { return ; }
+    this._data = this._data.set(attributeName, AttributeType(currentValue));
+  });
+}
+
+function overwriteAssociationAttributeWithAssocitionId(associationDefintion){
+  const associationName = associationDefintion.association;
+  const associationAttribute = associationDefintion.attribute;
+  // return if associationAttribute already set
+  if(isSavedId(this._data.get(associationAttribute))) { return; }
+
+  // return if no association
+  const association = this._data.get(associationName);
+  if(!association){return;}
+
+  this._data = this._data.set(associationAttribute, association.id());
+}
+
+function populateRelationData(){
+  this._relations.forEach( overwriteAssociationAttributeWithAssocitionId.bind(this));
 }
 
 class Model {
@@ -122,15 +151,9 @@ class Model {
     const defaultData = Map({[idAtribute]: createUnsavedId()});
 
     this._data = defaultData.merge(data);
-    this._schema.forEach( (AttributeType, attributeName) => {
-      const currentValue = this._data.get(attributeName);
-      if(!currentValue){return;}
-      const alreadyCoersed = typeof currentValue === AttributeType.name.toLowerCase();
-      if (alreadyCoersed) { return ; }
-      this._data = this._data.set(attributeName, AttributeType(currentValue));
-    });
 
-    this._relationshipJustReceivedId = relationshipJustReceivedId.bind(this);
+    populateRelationData.call(this);
+    coerseNewData.call(this);
     processNewData.call(this, defaultData);
   }
 
@@ -139,8 +162,6 @@ class Model {
       throw new IdChangedError("cannot change id attribute");
     }
     const newRecordData = this._data.merge(newData);
-    // console.log("OLD DATA", this._data)
-    // console.log("NEW DATA", newRecordData)
     if (newRecordData === this._data){ return this; }
     const SubClass = this.constructor;
     const newSubclassParams = {
@@ -150,7 +171,6 @@ class Model {
       options: this._options,
       events: this._events
     };
-    // console.log("Setting new data returning new model", newRecordData);
     const record = new SubClass(newSubclassParams);
     removeOldAssociationCallbacks.call(this);
     if (isIdSet.call(record, this._data)){
@@ -225,6 +245,11 @@ class Model {
     if (isUnsavedId(result[idAtribute])) { delete result[idAtribute]; }
     this._relations.forEach( relation => {
       delete result[relation.association];
+
+      if (relation.attribute){
+        const relationId = result[relation.attribute];
+        if (isUnsavedId(relationId)) {delete result[relation.attribute];}
+      }
     });
     return result;
   }

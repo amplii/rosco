@@ -30,7 +30,7 @@ export class ProfileImage extends Model{
     };
 
     options.relations = [
-      {model: User, association: 'User'},
+      {model: User, association: 'User', attribute: 'userId'},
       {model: Image, association: 'Image'}
     ];
     super(options);
