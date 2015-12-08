@@ -1,5 +1,9 @@
 {
-    "extends": ["standard"],
+    "extends": ["airbnb/base"],
+    "rules": {
+      "func-names": [0],
+      "no-unused-expressions": [0]
+    },
     "env": {
       "node": true,
       "browser": true,
