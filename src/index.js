@@ -36,7 +36,7 @@ function isUnsavedId(id) {
 }
 
 function isSavedId(id) {
-  return id !== null && !isUnsavedId(id);
+  return id && !isUnsavedId(id);
 }
 
 function invalidIDChange(newData) {
@@ -75,8 +75,10 @@ function handleCanBeCreated() {
 function overwriteAssociationAttributeWithAssocitionId(associationDefintion) {
   const associationName = associationDefintion.association;
   const associationAttribute = associationDefintion.attribute;
+
   // return if associationAttribute already set
-  if (isSavedId(this._data.get(associationAttribute))) { return; }
+  const associationId = this._data.get(associationAttribute);
+  if (isSavedId(associationId)) { return; }
 
   // return if no association
   const association = this._data.get(associationName);
@@ -123,7 +125,6 @@ function removeOldAssociationCallbacks() {
     newRelationshipInstance.clearOnIdSet(relation.onIdSetCallback);
   });
 }
-
 
 function populateRelationData() {
   this._relations.forEach(overwriteAssociationAttributeWithAssocitionId.bind(this));
