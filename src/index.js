@@ -41,11 +41,11 @@ function isSavedId(id) {
 
 function invalidIDChange(newData) {
   const idAtribute = this._options.get('idAtribute');
-  const existingId = this.get(idAtribute);
   if (this.isNewRecord()) { return false; }
   const newId = newData[idAtribute];
-  if (!newId) { return true; }
+  if (!newId) { return false; }
 
+  const existingId = this.get(idAtribute);
   return existingId !== newId;
 }
 
@@ -75,15 +75,15 @@ function handleCanBeCreated() {
 function overwriteAssociationAttributeWithAssocitionId(associationDefintion) {
   const associationName = associationDefintion.association;
   const associationAttribute = associationDefintion.attribute;
-
   // return if associationAttribute already set
   const associationId = this._data.get(associationAttribute);
-  if (isSavedId(associationId)) { return; }
+  if (isSavedId(associationId)) {
+    return;
+  }
 
   // return if no association
   const association = this._data.get(associationName);
   if (!association) { return; }
-
   this._data = this._data.set(associationAttribute, association.id());
 }
 
@@ -138,7 +138,6 @@ class Model {
       onIdSet: new List([]),
       onCanBeCreated: new List([]),
     });
-
     this._options = defaultOptions.merge(options);
     const idAtribute = this._options.get('idAtribute');
     const defaultData = new Map({ [idAtribute]: createUnsavedId() });
@@ -248,11 +247,6 @@ class Model {
     if (this.isNewRecord()) { delete result[idAtribute]; }
     this._relations.forEach(relation => {
       delete result[relation.association];
-
-      if (relation.attribute) {
-        const relationshipInstance = this.get(relation.association);
-        if (relationshipInstance && relationshipInstance.isNewRecord()) { delete result[relation.attribute]; }
-      }
     });
     return result;
   }

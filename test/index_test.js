@@ -211,6 +211,12 @@ describe('Model', function () {
       expect(this.subject.get('name')).to.be.undefined;
     });
 
+    it('will not overwrite the old options', function () {
+      const user = new User({ data: { id: 123 }, options: { isTempId: true } });
+      const newUserRecord = user.merge({ name: 'Piggy' });
+      expect(newUserRecord._options.get('isTempId')).to.be.true;
+    });
+
     it('knows when the data has changed', function () {
       const newUserRecord = this.subject.merge({ name: 'Piggy' });
       expect(this.subject === newUserRecord).to.be.false;
@@ -255,7 +261,8 @@ describe('Model', function () {
 
     it('does not return the relations when unsaved', function () {
       const profileImage = new ProfileImage({ data: { User: this.subject, name: 'Fun picture' } });
-      expect(profileImage.toJS()).to.deep.equal({ name: 'Fun picture' });
+      expect(this.subject.id()).to.be.ok;
+      expect(profileImage.toJS()).to.deep.equal({ name: 'Fun picture', userId: this.subject.id() });
     });
 
     it('does return the relations when saved', function () {
