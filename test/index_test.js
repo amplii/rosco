@@ -1,4 +1,4 @@
-import Model, { IdChangedError, IdAlreadySetError, AlreadyCanBeCreatedError } from '../src/index';
+import Model, { IdChangedError, IdAlreadySetError } from '../src/index';
 import { expect } from 'chai';
 import { User, Image, ProfileImage } from './fixtures/models';
 
@@ -183,12 +183,12 @@ describe('Model', function () {
       image.merge({ id: 565 });
     });
 
-    it('throws an error when the profile can be created and a callback is set', function () {
+    it('does not throw an error when the profile can be created and a callback is set', function (done) {
       const profileImage = new ProfileImage({});
-
-      expect(function () {
-        profileImage.onCanBeCreated(function () {});
-      }).to.throw(AlreadyCanBeCreatedError);
+      profileImage.onCanBeCreated(function (profile2) {
+        expect(profile2).to.equal(profileImage);
+        done();
+      });
     });
 
     it('throws an error when the profile already has an id and a callback is set', function () {

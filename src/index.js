@@ -20,12 +20,6 @@ class IdAlreadySetError extends ExtendableError {
   }
 }
 
-class AlreadyCanBeCreatedError extends ExtendableError {
-  constructor(m) {
-    super(m);
-  }
-}
-
 function createUnsavedId() {
   CURRENT_UNKNOWN_ID -= 1;
   return CURRENT_UNKNOWN_ID;
@@ -222,7 +216,7 @@ class Model {
       throw new IdAlreadySetError('cannot call onCanBeCreated, id has already been set');
     }
     if (this.canBeCreated()) {
-      throw new AlreadyCanBeCreatedError('cannot add callback when record can already be saved');
+      return callback(this);
     }
 
     const newOnCanBeCreated = this._events.get('onCanBeCreated').push(callback);
