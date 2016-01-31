@@ -256,19 +256,24 @@ describe('Model', function () {
 
     it('does not return an id when one is not set', function () {
       const newRecord = this.subject.merge({ name: 'Piggy' });
-      expect(newRecord.toJS()).to.deep.equal({ name: 'Piggy' });
+      expect(newRecord.toJS()).to.deep.equal({ name: 'Piggy', clientId: newRecord.id() });
+    });
+
+    it('returns the temp id for a clientId when a temp id is set', function () {
+      const user = new User({ data: { name: 'Ada', id: 123 }, options: { isTempId: true } });
+      expect(user.toJS()).to.deep.equal({ name: 'Ada', clientId: 123 });
     });
 
     it('does not return the relations when unsaved', function () {
       const profileImage = new ProfileImage({ data: { User: this.subject, name: 'Fun picture' } });
       expect(this.subject.id()).to.be.ok;
-      expect(profileImage.toJS()).to.deep.equal({ name: 'Fun picture', userId: this.subject.id() });
+      expect(profileImage.toJS()).to.deep.equal({ name: 'Fun picture', userId: this.subject.id(), clientId: profileImage.id() });
     });
 
     it('does return the relations when saved', function () {
       const newUser = this.subject.merge({ id: 123 });
       const profileImage = new ProfileImage({ data: { User: newUser, name: 'Fun picture' } });
-      expect(profileImage.toJS()).to.deep.equal({ name: 'Fun picture', userId: 123 });
+      expect(profileImage.toJS()).to.deep.equal({ name: 'Fun picture', userId: 123, clientId: profileImage.id() });
     });
   });
 });

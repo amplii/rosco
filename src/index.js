@@ -238,7 +238,10 @@ class Model {
   toJS() {
     const result = this._data.toJS();
     const idAtribute = this._options.get('idAtribute');
-    if (this.isNewRecord()) { delete result[idAtribute]; }
+    if (this.isNewRecord()) {
+      result.clientId = result[idAtribute];
+      delete result[idAtribute];
+    }
     this._relations.forEach(relation => {
       delete result[relation.association];
     });
