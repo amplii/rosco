@@ -68,8 +68,6 @@ function overwriteAssociationAttributeWithAssocitionId(associationDefintion) {
   // return if no association
   const association = this._data.get(associationName);
   if (!association) { return; }
-  // return if association, no need to reset data to a new record value
-  if (association.isNewRecord()) { return; }
   this._data = this._data.set(associationAttribute, association.id());
 }
 
@@ -235,6 +233,10 @@ class Model {
       delete result[idAtribute];
     }
     this._relations.forEach(relation => {
+      const associationInstance = this._data.get(relation.association);
+      if (associationInstance && associationInstance.isNewRecord()) {
+        delete result[relation.attribute];
+      }
       delete result[relation.association];
     });
     return result;

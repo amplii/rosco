@@ -267,7 +267,7 @@ describe('Model', function () {
     it('does not return the relations when unsaved', function () {
       const profileImage = new ProfileImage({ data: { User: this.subject, name: 'Fun picture' } });
       expect(this.subject.id()).to.be.ok;
-      expect(profileImage.toJS()).to.deep.equal({ name: 'Fun picture', userId: this.subject.id(), clientId: profileImage.id() });
+      expect(profileImage.toJS()).to.deep.equal({ name: 'Fun picture', clientId: profileImage.id() });
     });
 
     it('does return the relations when saved', function () {
