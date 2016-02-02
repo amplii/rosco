@@ -42,14 +42,14 @@ describe('Model', function () {
   describe('#onIdSet', function () {
     it('will call a callback when the id is set', function (done) {
       const user = new User();
-      let newUser = null;
       user.onIdSet(function () {
         expect(this).to.be.ok;
-        expect(this).to.equal(newUser);
+        expect(this.id()).to.equal(123);
+        expect(user.id()).not.to.equal(123);
         expect(this).not.to.equal(user);
         done();
       });
-      newUser = user.merge({ id: 123 });
+      user.merge({ id: 123 });
     });
 
     it('will throw an error when adding a callback and the user already has an error', function () {
@@ -64,14 +64,14 @@ describe('Model', function () {
   describe('#onIdSetOrNow', function () {
     it('will call a callback when the id is set', function (done) {
       const user = new User();
-      let newUser = null;
       user.onIdSetOrNow(function () {
         expect(this).to.be.ok;
-        expect(this).to.equal(newUser);
+        expect(this.id()).to.equal(123);
+        expect(user.id()).not.to.equal(123);
         expect(this).not.to.equal(user);
         done();
       });
-      newUser = user.merge({ id: 123 });
+      user.merge({ id: 123 });
     });
 
     it('will call immediatly when the user already has an id', function (done) {
@@ -108,22 +108,20 @@ describe('Model', function () {
       expect(profileImage.canBeCreated()).to.be.false;
     });
 
-    it('can be saved when the relation gets an id', function (done) {
+    it.only('can be saved when the relation gets an id', function (done) {
       const user = new User();
       const profileImage = new ProfileImage({ data: { User: user } });
-      let newUser = null;
       expect(profileImage.canBeCreated()).to.be.false;
 
       user.onIdSet(function (newUserRecord, oldUserRecord) {
         expect(this === newUserRecord).to.be.true;
-        expect(newUser === newUserRecord).to.be.true;
         expect(newUserRecord.isNewRecord()).to.be.false;
         expect(oldUserRecord.isNewRecord()).to.be.true;
         expect(profileImage.canBeCreated()).to.be.true;
         expect(profileImage.get('userId')).to.equal(973);
         done();
       });
-      newUser = user.merge({ id: 973 });
+      user.merge({ id: 973 });
     });
   });
 

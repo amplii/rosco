@@ -150,9 +150,7 @@ class Model {
     removeOldAssociationCallbacks.call(this);
     if (isIdSet.call(record, this)) {
       const self = this;
-      setTimeout(function () {
-        handleNewId.call(record, self);
-      });
+      handleNewId.call(record, self);
     }
     return record;
   }
