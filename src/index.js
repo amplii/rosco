@@ -29,10 +29,6 @@ function isUnsavedId(id) {
   return id < 0;
 }
 
-function isSavedId(id) {
-  return id && !isUnsavedId(id);
-}
-
 function invalidIDChange(newData) {
   const idAtribute = this._options.get('idAtribute');
   if (this.isNewRecord()) { return false; }
@@ -69,15 +65,11 @@ function handleCanBeCreated() {
 function overwriteAssociationAttributeWithAssocitionId(associationDefintion) {
   const associationName = associationDefintion.association;
   const associationAttribute = associationDefintion.attribute;
-  // return if associationAttribute already set
-  const associationId = this._data.get(associationAttribute);
-  if (isSavedId(associationId)) {
-    return;
-  }
-
   // return if no association
   const association = this._data.get(associationName);
   if (!association) { return; }
+  // return if association, no need to reset data to a new record value
+  if (association.isNewRecord()) { return; }
   this._data = this._data.set(associationAttribute, association.id());
 }
 
