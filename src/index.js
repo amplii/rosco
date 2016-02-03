@@ -72,8 +72,7 @@ function overwriteAssociationAttributeWithAssocitionId(associationDefintion) {
 }
 
 function relationshipJustReceivedId(recentlySavedInstance, oldInstance, relation) {
-  const relationshipKey = this._data.keyOf(oldInstance);
-  this._data = this._data.set(relationshipKey, recentlySavedInstance);
+  this._data = this._data.set(relation.association, recentlySavedInstance);
   overwriteAssociationAttributeWithAssocitionId.call(this, relation);
   if (!this.canBeCreated()) { return; }
   handleCanBeCreated.call(this);

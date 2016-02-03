@@ -108,7 +108,7 @@ describe('Model', function () {
       expect(profileImage.canBeCreated()).to.be.false;
     });
 
-    it.only('can be saved when the relation gets an id', function (done) {
+    it('can be saved when the relation gets an id', function (done) {
       const user = new User();
       const profileImage = new ProfileImage({ data: { User: user } });
       expect(profileImage.canBeCreated()).to.be.false;
