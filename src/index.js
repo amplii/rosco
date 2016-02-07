@@ -69,6 +69,10 @@ function overwriteAssociationAttributeWithAssocitionId(associationDefintion) {
   const association = this._data.get(associationName);
   if (!association) { return; }
   this._data = this._data.set(associationAttribute, association.id());
+  // delete the actual association model if we can just keep the id
+  if (!association.isNewRecord()) {
+    this._data = this._data.delete(associationName);
+  }
 }
 
 function relationshipJustReceivedId(recentlySavedInstance, oldInstance, relation) {

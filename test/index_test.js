@@ -181,6 +181,19 @@ describe('Model', function () {
       image.merge({ id: 565 });
     });
 
+    it('removes the actual relation object and just keeps the id when the id is set', function () {
+      const user = new User();
+      const image = new Image();
+      const profileImage = new ProfileImage({ data: { User: user, Image: image } });
+
+      expect(profileImage.get('User')).to.equal(user);
+      expect(profileImage.get('userId')).to.equal(user.id());
+      const user2 = user.merge({ id: 973 });
+      expect(profileImage.get('User')).to.be.undefined;
+      expect(profileImage.get('userId')).to.equal(user2.id());
+      expect(profileImage.get('userId')).not.to.equal(user.id());
+    });
+
     it('does not throw an error when the profile can be created and a callback is set', function (done) {
       const profileImage = new ProfileImage({});
       profileImage.onCanBeCreated(function (profile2) {
