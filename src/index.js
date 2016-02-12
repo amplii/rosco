@@ -150,6 +150,7 @@ class Model {
       events: this._events,
     };
     const record = new SubClass(newSubclassParams);
+    record._isCreateCalled = this._isCreateCalled;
     removeOldAssociationCallbacks.call(this);
     if (isIdSet.call(record, this)) {
       const self = this;
@@ -174,6 +175,18 @@ class Model {
     if (this._options.get('isTempId')) { return true; }
     const idAtribute = this._options.get('idAtribute');
     return isUnsavedId(this.get(idAtribute));
+  }
+
+  createNeedsToBeCalled() {
+    return !this.isCreateCalled() && this.isNewRecord();
+  }
+
+  createCalled() {
+    this._isCreateCalled = true;
+  }
+
+  isCreateCalled() {
+    return this._isCreateCalled;
   }
 
   onIdSet(callback) {

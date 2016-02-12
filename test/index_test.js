@@ -236,6 +236,29 @@ describe('Model', function () {
     });
   });
 
+  describe('#createNeedsToBeCalled', function () {
+    it('sets createCalled', function () {
+      this.subject.createCalled();
+      expect(this.subject.isCreateCalled()).to.be.true;
+    });
+    it('passes on with merge calls', function () {
+      this.subject.createCalled();
+      const instance2 = this.subject.merge({ field1: 'value 2' });
+      expect(instance2.isCreateCalled()).to.be.true;
+    });
+    it('returns true when create has not been called and the instance is new', function () {
+      expect(this.subject.createNeedsToBeCalled()).to.be.true;
+    });
+    it('returns false when the instance is not new', function () {
+      const user = this.subject.merge({ id: 123 });
+      expect(user.createNeedsToBeCalled()).to.be.false;
+    });
+    it('returns false when the create has been called', function () {
+      this.subject.createCalled();
+      expect(this.subject.createNeedsToBeCalled()).to.be.false;
+    });
+  });
+
   describe('#id', function () {
     it('returns a negative value for a new record', function () {
       expect(this.subject.id()).to.be.lt(0);
